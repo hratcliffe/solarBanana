@@ -1,0 +1,216 @@
+Overview of changes
+
+Approximately most to least significant
+
+SEE EOF for changes to IDL routines needed....................
+
+
+Makefile
+
+  Added makefile for compilation
+  
+    Type "make" to compile
+    Faster recompilation if change only some files
+    Allows to compile in parallel if wanted
+    'make clean' removes module files etc
+
+File format 
+
+  Changed to unformatted. Use readu in IDL
+  (Note: if running on IBM architecture may have to provide switch to IDL for byte ordering)
+
+    Reduces size by around factor 3
+    Allows use of mpiIO routines to write from processors individually.
+    Reduces memory requirement on root processor by factor n where n is number of processors
+    Speeds up IO by factor propto n
+
+
+MPI communication
+
+  Blocking send/recieve changed to MPI_SENDRECV which handles both ends of communication
+    MPI communication no longer serialised
+    Speeds up communication by factor propto n
+
+
+Whole domain variables
+
+  Variables no longer exist across the entire space domain on root processor
+  All definitions and evolution are done on individual processor's sections
+    Memory requirement on root reduced by factor n
+    Speed-up in initialization propto factor n
+  
+
+Subroutine calls
+  
+  No longer calls each routine n_xp times on array subsections, instead calls once on whole array
+    Array subsection passing is slow process requiring making a copy of relevant part
+    Speeds up calls by factor unknown
+
+
+FORALL loops
+
+  Returned to DO loops rather than FORALL
+    FORALL allows more complex indices which aren't required and complicate compiled code unnecessarily
+    Speeds up loops by around 10%
+
+
+Restart routine
+
+  Re-implemented, to run from specific restart data dumps
+  Also reads original density profile, including fluctuations if added, so result will continue the same
+
+Calculation of wave wave coupling
+    
+  Better method to interpolate between different k grids introduced
+    Ensures energy conservation in this process
+    More stable with respect to coarse k-grid
+    Simpler, more transparent code
+    
+Global variables
+
+  Loop indices are no longer global
+    Led to pathologies on Intel compiler
+
+  Velocity, k_x and dk_x are now global as are k_f, k_h etc
+    Reduces array passing to subroutines
+
+
+Timestep determination
+  
+  Makes use of MPI functionality to find maximum wave energy density
+    Faster, more transparent code
+
+  Propagation timestep for EM waves used to determine code main step, dt
+
+
+IF statements
+
+  IF statement use has been reduced where possible, replacing with MAX functions or [0,1] variables
+    Allows better optimisation by compiler
+
+
+Bounds on passed arrays
+
+  Arrays passed to subroutines have been given implied bounds
+
+
+Allocation of arrays in subroutines
+
+  Arrays used in subroutines with non-constant size (e.g. n_xp) are formally allocated/deallocated
+
+
+F77 type syntax
+
+  Updated syntax for e.g. alog-> log, double precision -> real(kind=8)
+    
+
+Divide-by-zero
+
+  Potential divide-by-zero errors have been removed to protect against compiler differences
+
+
+Input value checking
+    
+  More checking that input values are sensible and error messages or amendments where necessary
+
+
+Code structure
+  
+  Divided and renamed subroutines by purpose
+  Rearranged module file to group routines by purpose
+
+
+Init params file versus constants
+  
+  Moved some key variables to the init.par file so they may be changed without recompiling
+  Changed method of reading init.par file to Namelists so can easily add more items
+  Only root reads file: multiple parallel reads can cause problems on some systems
+
+
+Progress file and wallclock file
+
+  Uses MPI_Wtime to record a wallclock time elapsed on each save
+  Ditto to record total running time
+
+
+Added outputs
+  
+  Velocity, k_x, k_f, k_h output to file. See below for IDL instructions to read them
+  TO BE DONE- indices file, timesteps etc
+  Warnings file to record if certain condtions arise (not yet completed)
+
+
+Output files
+
+  Dump everything in full precision only for restart purposes
+  Dump only necessary data for science, controlled by input file
+    Choice of single or double precision for this
+  Dump edges of EM domains to make dynamic spectra. One file per time to allow restarting
+  
+
+ADDITIONS
+
+Rejigged outputs to include:
+
+Velocity and wavenumbers
+Smooth background density profile
+
+Progress and warnings files 
+
+
+CHANGES TO IDL READING PROCEDURES
+
+readf should be changed to readu
+fwd and xdf are now written transposed, reverse indices of xdf before reading and transpose it after
+write an extra file containing velocities and wavenumbers
+If using the single-precision data dumps, change reading arrays to flt instead of dbl 
+
+ADD to drst the following:
+
+k_x_in=dblarr(kvc)
+vely_in=dblarr(vc)
+k_f_in= etc.....
+
+fname = string(path_start,path,'velocity.dat')
+openr,1,fname
+readf,1,vely_in
+readf,1,k_x_in
+ readf,1,k_f_in
+ readf,1,k_h_in
+close,1
+
+print,'Read velocity.dat'
+
+.............................................................
+
+required parameters now written into params.dat rather than drawing from init.par
+In DRST replace lines between 'params	= dblarr(4)' and 'xc=fix(init(9))-3' by
+......................................................................
+params	= dblarr(10)
+
+fname = string(path_start,path,'params.dat')
+openr,1,fname
+readf,1,params
+close,1
+
+print,'Read params.dat'
+
+kvc = params(2)
+vc = params(3)
+
+xc=fix(params(4))-3
+....................................................................
+
+
+and in infovk change definitions:
+d	= params(7)*1d+9
+x_0	= params(8)
+x_min	= params(9)
+tsave	= params(5)*x2
+n_beam = params(6)
+
+dn_dx(*) = xTau(2,*)
+n_e(*) = xdf(1,*)
+n_e_smth(*) = xdf(4,*)
+omega(*) = xdf(2,*)  ;*1e6*2*!pi
+freq(*) = xdf(2,*)

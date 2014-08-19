@@ -1,0 +1,65 @@
+&CONFIG 
+  !configuration parameters
+T_max = 200. , 
+
+time_print = 0.01 ,
+  !how often to print progress to screen
+time_save = 0.01 ,
+  !science data dump every 
+restart_t = 0.01,
+  !restartable (full precision, all parameters) dump every
+dyn_spec_t = 0.01,
+  !em dynamic spectra file dump every
+
+t_start = 0.
+  !change this to appropriate value if restarting... DO NOT change any other parameters
+  !ESPECIALLY restart_t...
+
+d = 1.d9 ,
+x_0 = 2.d9 ,
+x_min = -2.d9 ,
+
+n_x = 403
+
+/
+
+&BEAM
+  !electron beam parameters
+
+n_beam = 5.d6 ,
+v_beam = 20.d9 ,
+
+  !rise and decay times for electron injection
+tau = 1e-3 ,
+tau2 = 4e-3
+
+/
+
+&PLASMA
+  !plasma parameters
+
+N=0 ,
+  !number of fluctuating density components INTEGER. 0 or-ve for no flucs
+
+  !temperatures
+t_e=2.d6 ,
+t_i=2.d6 
+
+/
+
+&FILENAMES
+path = '/storage/space2/phsmbb/EMTESTRUN/'
+
+/
+
+&DATADUMPS
+  !whether to produce various data 
+  ! >=1 for yes, <=0 for no
+  !f, w, s, harm, fund, dynspecs
+  !NOTE restart dumps always save everything
+dumpArr = 1,1,1,1,1,1,
+dumpSingle = 0
+  !dump in single precision only
+rollRestart = 1
+  !if >=1, delete older restart files, keeping only the latest one
+/
