@@ -77,7 +77,7 @@ beam:$(OBJECTS)
 .PHONY: clean veryclean
 
 clean:
-	rm -f *.o *.mod *.MOD
+	rm -f *.o *.mod *.MOD ./code
 
 veryclean: clean
 	rm -f *~ $(OBJECTS)
