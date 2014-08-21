@@ -48,7 +48,7 @@ t_i=2.d6
 /
 
 &FILENAMES
-path = '/storage/space2/phsmbb/EMTESTRUN/'
+path = '/Users/heatherratcliffe/DATA/EMTests/'
 
 /
 

@@ -9,10 +9,10 @@ OBJECTS = constants.o parameters.o i_o.o distribsinit.o initialise.o quasilinear
 
 HELPERMODS = constants.o parameters.o
 
-TARGET = code
+TARGET = solarBanana
 
 
-code : $(OBJECTS) beam.o
+solarBanana : $(OBJECTS) beam.o
 	$(CC) $(FFLAGS) -o $(TARGET) $(OBJECTS) beam.o
 
 constants.o:constants.f90
@@ -77,7 +77,7 @@ beam:$(OBJECTS)
 .PHONY: clean veryclean
 
 clean:
-	rm -f *.o *.mod *.MOD ./code
+	rm -f *.o *.mod *.MOD ./solarBanana
 
 veryclean: clean
 	rm -f *~ $(OBJECTS)

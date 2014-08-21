@@ -76,7 +76,7 @@
 
 	! OUTPUT File names
 
-        CHARACTER(*), PARAMETER:: init_params = 'initL.par'
+        CHARACTER(*), PARAMETER:: init_params = 'init.par'
 
         ! Input file name 
 

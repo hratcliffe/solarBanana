@@ -389,6 +389,7 @@ SUBROUTINE  write_profiles_restart (fxyz, wxyz, w_t, w_s, w_em, w_em_f, t_step, 
 
 
   IF(rollRestart .GE. 1) THEN
+  	IF(rank == 0) THEN
   !if we're rolling restarts, then we delete the second to last one.
   !We ALWAYS keep the current one, and the previous, just in case we manage to terminate mid-dump...
     
@@ -396,7 +397,7 @@ SUBROUTINE  write_profiles_restart (fxyz, wxyz, w_t, w_s, w_em, w_em_f, t_step, 
     write (Findex,'(i5.5)')  t_step-2
     IF(t_step .LT. 2) write (Findex,'(i5.5)')  0
     Findex=trim(Findex)
-print*, 'DELETING!!', findex
+	print*, 'Deleting Restart no.', findex
     vxfwd_flush= trim(vxfwd_sequence//Findex//'R.dat')  
     fxv_flush= trim(fxv_matrix//Findex//'R.dat')  
     wxv_flush= trim(wxv_matrix//Findex//'R.dat')  
@@ -404,23 +405,14 @@ print*, 'DELETING!!', findex
     w_em_f_flush= trim(w_em_f_matrix//Findex//'R.dat')  
     w_s_flush= trim(w_s_matrix//Findex//'R.dat')  
 
-  
-    CALL MPI_FILE_DELETE(fxv_flush, MPI_INFO_NULL, ecode)
-print*, ecode
-
-    CALL MPI_FILE_DELETE(wxv_flush, MPI_INFO_NULL, ecode)
-print*, ecode
-
-    CALL MPI_FILE_DELETE(w_s_flush, MPI_INFO_NULL, ecode)
-print*, ecode
-
-    CALL MPI_FILE_DELETE(w_em_flush, MPI_INFO_NULL, ecode)
-print*, ecode
-
-    CALL MPI_FILE_DELETE(w_em_f_flush, MPI_INFO_NULL, ecode)
-print*, ecode
-! 
-
+ 
+    CALL MPI_FILE_DELETE(TRIM(path)//fxv_flush, MPI_INFO_NULL, ecode)
+	CALL MPI_FILE_DELETE(TRIM(path)//wxv_flush, MPI_INFO_NULL, ecode)
+  	CALL MPI_FILE_DELETE(TRIM(path)//w_s_flush, MPI_INFO_NULL, ecode)
+	CALL MPI_FILE_DELETE(TRIM(path)//w_em_flush, MPI_INFO_NULL, ecode)
+	CALL MPI_FILE_DELETE(TRIM(path)//w_em_f_flush, MPI_INFO_NULL, ecode)
+ 
+	ENDIF
   ENDIF
 
 
