@@ -1,0 +1,1 @@
+Fortran 90 code to simulate production of solar Type III radio bursts produced by an electron beam. Parallelised over space using MPI libraries. Written by H Ratcliffe/C.S. Brady (University of Warwick, UK) based on version by H.A.S. Reid/E.P. Kontar. Equations/description in H. Ratcliffe, E.P.Kontar, H.A.S.Reid, A & A, NUMBER (2014).
