@@ -22,7 +22,7 @@ SUBROUTINE num_points_check
 !    stop
     !terminate code OR next line instead increases n_x
   n_x_old = n_x
-  n_x = n_xp*n_p + 3
+  n_x = (n_xp+1)*n_p + 3
   print*, 'WARNING, n_x does not divide n_p.............................................'
   print*, 'changing n_x from', n_x_old, 'to', n_x
 

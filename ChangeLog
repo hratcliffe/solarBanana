@@ -57,6 +57,7 @@ FORALL loops
 Restart routine
 
   Re-implemented, to run from specific restart data dumps
+  Rolling restart added, deletes older restart files to reduce total output
   Also reads original density profile, including fluctuations if added, so result will continue the same
 
 Calculation of wave wave coupling

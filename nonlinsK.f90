@@ -236,14 +236,10 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
       a_eml=0.
       a_ems=0.
 
-
-
     DO i=-lpc, -1
-
 
  	nl2 = sum(N_L(ind_2pl(i)+up_2pl(i):ind_2pl(i)))
 	ns2 = sum(N_s(ind_pls(i):ind_pls(i)+up_pls(i)))
-
 
 ! 	evolution of all wave spectral energy densities in SINGLE L <--> L /pm s encounter
 ! 	forces conservation of energy in the scattering process
@@ -260,7 +256,6 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
 
 
       ENDDO
-
 
       DO i=1, lpc
 
@@ -390,10 +385,10 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
 
 !   semi-implicit evolution of wave spectral enery densities
 
-!      W_em(:,j) = w_em(:,j)  + (a_eme + a_eme2*n_em)*alpha_em(j)*k2*dt_is   &
-! 	  - (w_em(:,j) - w_f0)*gamma_d_f(:,j)/omega_emf_om**2 *dt_is
-!      w_l_new(:,j) = w_l_new(:,j) + a_eml*alpha_em(j)*dt_is*k2
-!      w_s(:,j) = w_s(:,j)+ a_ems*alpha_em(j)*dt_is*k2
+     W_em(:,j) = w_em(:,j)  + (a_eme + a_eme2*n_em)*alpha_em(j)*k2*dt_is   &
+ 	  - (w_em(:,j) - w_f0)*gamma_d_f(:,j)/omega_emf_om**2 *dt_is
+      w_l_new(:,j) = w_l_new(:,j) + a_eml*alpha_em(j)*dt_is*k2
+      w_s(:,j) = w_s(:,j)+ a_ems*alpha_em(j)*dt_is*k2
 
       where(w_s(:,j) .LE. 0) w_s(:,j) = 0.
       w_s(0 , j) = 0.

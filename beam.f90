@@ -123,15 +123,19 @@ min_dx=minval(abs(delta_x))
 ALLOCATE (r_x_p(n_xp+3))
 ALLOCATE (delta_x_p(n_xp+3))
 
-r_x_p = r_x(rank*n_xp+1:)
-delta_x_p = delta_x(rank*n_xp+1:)
+r_x_p = r_x(rank*n_xp+1:(rank+1)*n_xp+3)
+delta_x_p = delta_x(rank*n_xp+1:(rank+1)*n_xp+3)
   
+IF(minval(abs(r_x)) .GE. min_dx/2.) THEN
+ print*, "Duude, negative space!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+ stop
+ !abort if we don't resolve the injection region...
+ENDIF
+
 min_tmp=minloc(abs(r_x_p))
 r_zero=0
-print*, rank, minval(abs(r_x_p))
 IF(minval(abs(r_x_p)) .LE. min_dx/2.) r_zero = rank
 CALL MPI_ALLREDUCE(MPI_IN_PLACE, r_zero, 1, MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, ecode)
-print*, r_zero
 ! location of r_x=~0, including rank of processor
 
 DEALLOCATE(r_x,delta_x)
@@ -243,12 +247,12 @@ ALLOCATE (landau_arr_p(-n_v:n_v,n_xp+3))
   ELSE
     CALL write_profiles_single (REAL(f_p, 4), REAL(w_p, 4), REAL(w_t_p, 4), REAL(w_s_p, 4) &
   , REAL(w_em_p,4), REAL(w_em_f_p,4), FLOOR(t/time_save), REAL(omega_p,4), REAL(delta_x_p,4))
-! writing inital profiles to file
+ ! writing inital profiles to file
   ENDIF
 
 
-  IF (rank == 0) CALL write_parameters 
-! Writing some key variables to the screen
+ IF (rank == 0) CALL write_parameters 
+ ! Writing some key variables to the screen
   
 
 ! MAIN LOOP starts here ***********************************************

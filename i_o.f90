@@ -155,8 +155,6 @@ ENDIF
 
 ! calculate total beam and wave energies at each point in space etc------------------------------------------------------------------
 
-
-
 DO j= 3, n_xp+2
   density(j) = sum(fxyz(:,j))*dv*k1
   DO i = -n_v, n_v
@@ -197,7 +195,7 @@ offset = 0
  CALL MPI_ALLREDUCE(sum(e_beam), eb_tot, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ecode)
  CALL MPI_ALLREDUCE(sum(e_wave), ew_tot, 1, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ecode)
 
-  if(rank==0) write(*,'(A,ES10.3,A,ES10.3,A,ES10.3,A,ES10.3)') 'Density ',dens_tot,'   Beam E ',eb_tot,&
+ IF(rank==0) WRITE(*,'(A,ES10.3,A,ES10.3,A,ES10.3,A,ES10.3)') 'Density ',dens_tot,'   Beam E ',eb_tot,&
   '   Wave E ',ew_tot/ew_0,'   Tot E ',eb_tot+ew_tot
 !  writing to screen
 
@@ -321,7 +319,7 @@ e_beam = e_beam*dv*k1*m_e/2.0
  CALL MPI_ALLREDUCE(sum(e_beam), eb_tot, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD, ecode)
  CALL MPI_ALLREDUCE(sum(e_wave), ew_tot, 1, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD, ecode)
 
-  if(rank==0) write(*,'(A,ES10.3,A,ES10.3,A,ES10.3,A,ES10.3)') 'Density ',dens_tot,'   Beam E ',eb_tot,&
+ IF(rank==0) WRITE(*,'(A,ES10.3,A,ES10.3,A,ES10.3,A,ES10.3)') 'Density ',dens_tot,'   Beam E ',eb_tot,&
   '   Wave E ',ew_tot/ew_0,'   Tot E ',eb_tot+ew_tot
 !  writing to screen
 
