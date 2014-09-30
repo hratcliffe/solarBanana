@@ -4,7 +4,7 @@ T_max = 200. ,
 
 time_print = 0.01 ,
   !how often to print progress to screen
-time_save = 0.1 ,
+time_save = 0.01 ,
   !science data dump every 
 restart_t = 10.,
   !restartable (full precision, all parameters) dump every

@@ -271,7 +271,7 @@ main :    DO WHILE (t .le. t_max)
 
   IF (time_save - MOD(t, time_save) .LE. dt) THEN 
    IF (dumpSingle .LE. 0) THEN
-       CALL write_profiles (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/time_save), omega_p, delta_x_p)
+       CALL write_profiles (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/time_save)+1, omega_p, delta_x_p)
     ELSE
       CALL write_profiles_single (REAL(f_p, 4), REAL(w_p, 4), REAL(w_t_p, 4), REAL(w_s_p, 4) & 
   ,REAL(w_em_p,4), REAL(w_em_f_p,4), FLOOR(t/time_save)+1, REAL(omega_p,4), REAL(delta_x_p,4))
