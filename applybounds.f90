@@ -19,14 +19,14 @@ SUBROUTINE electron_bounds(f_new)
 
   DO j=3, n_xp+2
 
-    f_new(-n_v:-n_v, j) = -f_new(-n_v+1, j)
-    f_new(n_v, j) = -f_new(n_v-1, j)
+    f_new(-n_v, j) = f_new(-n_v+1, j)
+    f_new(n_v, j) = f_new(n_v-1, j)
 !       infinite velocity boundary condition
 
-    f_new(1, j) = -f_new(2, j)
-    f_new(-1, j) = -f_new(-2, j)
-    f_new(0, j) = (f_new(1,j)+f_new(-1,j))/2.
-!   zero velocity conditions
+    f_new(1, j) = f_new(2, j)
+    f_new(-1, j) = f_new(-2, j)
+    f_new(0, j) = f_new(1,j)
+!  low velocity conditions, enforce zero gradients except at zero
   
   ENDDO
 

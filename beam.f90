@@ -354,13 +354,18 @@ DO while (abs(t - t_ql) .GE. tiny(1.e0))
  CALL MPI_BARRIER(MPI_COMM_WORLD, ecode)
 ! within soundwaves we have differing timestep over space. protect against one processor getting here earlier
 ! ----------------------------------------------------------------------------------------------------
+  where (w_new_p(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_new_p(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
+
+ ! where (f_new_p(-n_v+2:n_v-2,:) .le. 1d-60) f_new_p(-n_v+2:n_v-2,:)=1d-60
+  
+  !bnd conds may introduce -ves, so make sure they go after these zero protects
+  !and keep the edge exclusions 
  
   CALL electron_bounds(f_new_p)
   CALL langmuir_bounds(w_new_p)
   CALL fundamental_bounds(w_em_f_p)
+ 
   
-
-  where (w_new_p(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_new_p(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
   w_p_ql=w_new_p	
   f_p_ql=f_new_p
 
@@ -385,12 +390,13 @@ dt_ql_av = dt_ql_av/counter
 
   CALL upwind(w_p , w_new_p , delta_x_p)
 
-    IF (t <= 4*tau+4*tau2) CALL fsource(f_new_p, r_x_p)
-
+  IF (t <= 4*tau+4*tau2) CALL fsource(f_new_p, r_x_p)
+  
   CALL electron_bounds(f_new_p)
   CALL langmuir_bounds(w_new_p)
   CALL fundamental_bounds(w_em_f_p)
   CALL harmonic_bounds(w_em_p)
+  
   where (w_new_p(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_new_p(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
 
 

@@ -4,11 +4,11 @@ T_max = 200. ,
 
 time_print = 0.01 ,
   !how often to print progress to screen
-time_save = 0.01 ,
+time_save = 0.1 ,
   !science data dump every 
-restart_t = 0.01,
+restart_t = 10.,
   !restartable (full precision, all parameters) dump every
-dyn_spec_t = 0.01,
+dyn_spec_t = 0.1,
   !em dynamic spectra file dump every
 
 t_start = 0.
