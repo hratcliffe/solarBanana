@@ -43,6 +43,9 @@ SUBROUTINE space_grid_define(xmin, r_x, delta_x)
   REAL(KIND=8):: x_local, d_x, dtemp, travel
   INTEGER(KIND=4)::i
 
+
+
+
   d_x = d/7.
   dtemp = d
   x_local = xmin;
@@ -100,7 +103,6 @@ SUBROUTINE velocity_define
     velocity(i) = v_min + (i-1)*dv
     velocity(-i) = -velocity(i)
   ENDDO
-
 
   k_x(-n_v:n_v) = v_t/velocity(-n_v:n_v)
 
@@ -182,7 +184,7 @@ SUBROUTINE em_wavevec_define
 !   make it in terms of omega_pe say 10 percent total range
 
   k_h_min = sqrt(1.9*1.9 - 1.)*v_t/v_c
-  k_h_max = sqrt(2.3*2.3 - 1.)*v_t/v_c
+  k_h_max = sqrt(4.*4. - 1.)*v_t/v_c
   dk_h = (k_h_max - k_h_min)/(2.*float(n_kv))
 
   DO i=-n_kv, -1

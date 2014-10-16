@@ -1,6 +1,6 @@
 &CONFIG 
   !configuration parameters
-T_max = 200. , 
+T_max = 2. , 
 
 time_print = 0.01 ,
   !how often to print progress to screen

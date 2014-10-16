@@ -17,15 +17,15 @@ SUBROUTINE electron_bounds(f_new)
 
 !   open boundary condition
 
-  DO j=3, n_xp+2
+  DO j=1, n_xp+3
 
     f_new(-n_v, j) = f_new(-n_v+1, j)
     f_new(n_v, j) = f_new(n_v-1, j)
 !       infinite velocity boundary condition
 
-    f_new(1, j) = f_new(2, j)
-    f_new(-1, j) = f_new(-2, j)
-    f_new(0, j) = f_new(1,j)
+!    f_new(1, j) = f_new(2, j)
+    f_new(-1, j) =0d0 ! f_new(-2, j)
+    f_new(0, j) = 0d0! f_new(1,j)
 !  low velocity conditions, enforce zero gradients except at zero
   
   ENDDO
@@ -33,7 +33,7 @@ SUBROUTINE electron_bounds(f_new)
 END SUBROUTINE electron_bounds
 
 
-SUBROUTINE langmuir_bounds(w_new)
+SUBROUTINE langmuir_bounds(w_new, w_t)
 
  USE CONSTANTS
 
@@ -41,12 +41,12 @@ SUBROUTINE langmuir_bounds(w_new)
 
   IMPLICIT NONE
 
-  REAL(KIND=8), DIMENSION(-n_kv:, :), INTENT(INOUT) :: w_new
+  REAL(KIND=8), DIMENSION(-n_kv:, :), INTENT(INOUT) :: w_new, w_t
   INTEGER(KIND=4):: j
 
 !   open boundary condition
 
-  DO j=3, n_xp+2
+  DO j=1, n_xp+3
 
     w_new(-n_kv, j) = -w_new(-n_kv+1, j)
     w_new(n_kv, j) = -w_new(n_kv-1, j)
@@ -59,6 +59,9 @@ SUBROUTINE langmuir_bounds(w_new)
 !   k=k_de bounds
   
   ENDDO
+
+! if(rank ==0) w_new(:,1:10)=w_t(:,1:10)
+
 
 END SUBROUTINE langmuir_bounds
 

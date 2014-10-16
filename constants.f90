@@ -29,12 +29,13 @@
 	! Solar radius
 	REAL(KIND=8), PARAMETER:: AU = 1.5d+13
 	! Astronomical Unit	
-	INTEGER, PARAMETER:: n_v = 50;
+	INTEGER, PARAMETER:: n_v = 150;
 	! Number of V cells on one side
 	INTEGER, PARAMETER:: n_k = 50;
 	! Number of extra K cells on one side
-	INTEGER, PARAMETER:: n_kv = 100;
+	INTEGER, PARAMETER:: n_kv =200;
 	! Number of total cells on one side == n_v + n_k
+	
     CHARACTER(*), PARAMETER:: vxfwd_sequence = 'fwd'
     CHARACTER(*), PARAMETER:: fxv_matrix = 'fxv'
     CHARACTER(*), PARAMETER:: wxv_matrix = 'wxv'

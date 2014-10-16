@@ -187,7 +187,7 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
 ! defining the various constants involved...................................................
  
    
-  DO j= 1, n_xp+3
+  DO j= 3, n_xp+2
      gamma_s_kd(:,j) = gamma_s*omega(j)*abs(k_x)
      gamma_d_f(:,j) = gamma_d_emf*omega(j)*omega(j)
 
@@ -213,7 +213,7 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
     w_f0=w_f0_om*omega(j)*omega(j)
 
     t_is=0.
-    dt_is = dt_ql/4.
+    dt_is = dt_ql/5.
 
     DO WHILE (abs(t_is - dt_ql) .GE. tiny(1.e0))
 
@@ -236,8 +236,8 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
       a_eml=0.
       a_ems=0.
 
-    DO i=-lpc, -1
-
+    DO i=-lpc, -2
+!	cycle
  	nl2 = sum(N_L(ind_2pl(i)+up_2pl(i):ind_2pl(i)))
 	ns2 = sum(N_s(ind_pls(i):ind_pls(i)+up_pls(i)))
 
@@ -257,12 +257,13 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
 
       ENDDO
 
-      DO i=1, lpc
+
+      DO i=2, lpc
 
 ! wave ocupation numbers involved	
 
  	nl2 = sum(N_L(ind_2pl(i):ind_2pl(i)+up_2pl(i)))
-	ns2 = sum(N_s(ind_pls(i):ind_pls(i)+up_pls(i)))
+	ns2 = sum(N_s(ind_pls(i)+up_pls(i):ind_pls(i)))
 
 
 ! 	evolution of all wave spectral energy densities in SINGLE L <--> L /pm s encounter
@@ -275,8 +276,8 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
 	a_l(ind_2pl(i):ind_2pl(i)+up_2pl(i)) = a_l(ind_2pl(i):ind_2pl(i)+up_2pl(i)) + ns2*n_l(i)*frac_2pl(i)
 	a_l2(ind_2pl(i):ind_2pl(i)+up_2pl(i)) = a_l2(ind_2pl(i):ind_2pl(i)+up_2pl(i)) - (ns2 -n_l(i))*frac_2pl(i)
 
-	a_s(ind_pls(i):ind_pls(i)+up_pls(i)) = a_s(ind_pls(i):ind_pls(i)+up_pls(i)) + n_l(i)*nl2*frac_pls(i)
-	a_s2(ind_pls(i):ind_pls(i)+up_pls(i)) = a_s2(ind_pls(i):ind_pls(i)+up_pls(i)) + (n_l(i) - nl2)*frac_pls(i)
+	a_s(ind_pls(i)+up_pls(i):ind_pls(i)) = a_s(ind_pls(i)+up_pls(i):ind_pls(i)) + n_l(i)*nl2*frac_pls(i)
+	a_s2(ind_pls(i)+up_pls(i):ind_pls(i)) = a_s2(ind_pls(i)+up_pls(i):ind_pls(i)) + (n_l(i) - nl2)*frac_pls(i)
 
 
       ENDDO
@@ -363,32 +364,33 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
       a_ems(0)=0.
 
 
-      s_terms= (alpha_is_d(j)*a_s2/2.  -gamma_s_kd(:,j))
+      s_terms= (alpha_is_d(j)*a_s2/2. -gamma_s_kd(:,j))
       s_terms2 = a_s *alpha_is_d(j)*omega_s_om/2.
       l_terms = a_L2*alpha_is_d(j)
       em_terms = a_eme2*alpha_em(j)*k2
       
 !   subcycle timestep determination at given space pt
-      dt_is =min(0.1/(maxval(s_terms)+tiny(1.d0)),0.1/(maxval(em_terms)+tiny(1.d0)), &
-  1./(maxval(l_terms(-lpc:lpc))+tiny(1.d0)), dt_ql/8.)
+dt_is=dt_ql/6.
+   !   dt_is =min(0.1/(maxval(s_terms)+tiny(1.d0)),0.1/(maxval(em_terms)+tiny(1.d0)), &
+!  0.1/(maxval(l_terms(-lpc:lpc))+tiny(1.d0)), dt_ql/10.)
 !         if(j== n_xp/2) print*,rank, dt_is, 1./(maxval(l_terms(-lpc:lpc))+tiny(1.d0))
 !          dt_is=dt_ql/8.
       t_is_new=min(t_is + dt_is, dt_ql)
       dt_is = t_is_new-t_is
       t_is = t_is_new
 
-!       w_l_new(:,j) = W_L_new(:,j) + alpha_is_d(j)*omega_l_om*dt_is*(a_L + a_l2*N_L)
-      w_l_new(:,j) = (W_L_new(:,j) + a_L*alpha_is_d(j)*omega_l_om*dt_is)/(1. - dt_is*l_terms)
+       w_l_new(:,j) = W_L_new(:,j) +0.944* alpha_is_d(j)*omega_l_om*dt_is*(a_L + a_l2*N_L)
+      !w_l_new(:,j) = (W_L_new(:,j) + a_L*alpha_is_d(j)*omega_l_om*dt_is)/(1. - dt_is*l_terms)
 
-      W_s(:,j) = (W_s(:,j) + s_terms2*dt_is)/(1.- dt_is*s_terms)
+    !  W_s(:,j) = (W_s(:,j) + s_terms2*dt_is)/(1.- dt_is*s_terms)
 !       w_s(:,j) = w_s(:,j) + dt_is *(s_terms
 
 !   semi-implicit evolution of wave spectral enery densities
 
-     W_em(:,j) = w_em(:,j)  + (a_eme + a_eme2*n_em)*alpha_em(j)*k2*dt_is   &
- 	  - (w_em(:,j) - w_f0)*gamma_d_f(:,j)/omega_emf_om**2 *dt_is
-      w_l_new(:,j) = w_l_new(:,j) + a_eml*alpha_em(j)*dt_is*k2
-      w_s(:,j) = w_s(:,j)+ a_ems*alpha_em(j)*dt_is*k2
+  !   W_em(:,j) = w_em(:,j)  + (a_eme + a_eme2*n_em)*alpha_em(j)*k2*dt_is   &
+ !	  - (w_em(:,j) - w_f0)*gamma_d_f(:,j)/omega_emf_om**2 *dt_is
+     ! w_l_new(:,j) = w_l_new(:,j) + a_eml*alpha_em(j)*dt_is*k2
+     ! w_s(:,j) = w_s(:,j)+ a_ems*alpha_em(j)*dt_is*k2
 
       where(w_s(:,j) .LE. 0) w_s(:,j) = 0.
       w_s(0 , j) = 0.
@@ -406,6 +408,8 @@ SUBROUTINE soundwaves_with_em(w_s, w_l_new, w_em, omega, density)
   DEALLOCATE( gamma_s_kd, alpha_is_d, alpha_em, gamma_d_f)
 
 END SUBROUTINE soundwaves_with_em
+
+
 
 
 SUBROUTINE harmonic(w_l, w_em_new, omega, density)

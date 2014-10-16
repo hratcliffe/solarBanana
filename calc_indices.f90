@@ -15,7 +15,7 @@ SUBROUTINE coeff(Omega_x,landau_arr,gamma_cw,gamma_cp,density_x,log_v_v_t, a2, b
 IMPLICIT NONE
 
 REAL(KIND=8), DIMENSION(:),INTENT(IN) :: density_x,Omega_x
-REAL(KIND=8), DIMENSION(:):: gamma_cw, gamma_cp, a2, b2
+REAL(KIND=8), DIMENSION(n_xp+3):: gamma_cw, gamma_cp, a2, b2
 REAL(KIND=8), DIMENSION(-n_v:n_v),INTENT(OUT):: log_v_v_t
 REAL(KIND=8), DIMENSION(-n_v:,:):: landau_arr
 REAL(KIND=8), DIMENSION(n_xp+3) :: Tql,debye_l,c_log
@@ -92,7 +92,7 @@ SUBROUTINE em_prop_dt
 
 !   print*, dt_x, dt_k
   dt = min(dt_x, dt_k)
-
+	dt=2d-4
 !   EM propagation timescale. need to do comms on this. no change in time. based on harmonic as v_grp faster...
 
 
@@ -111,18 +111,18 @@ SUBROUTINE coeff_sound
   REAL(KIND=8) :: k_new, k_max_max, k_max_s, k_prime
   INTEGER(KIND=4)::i
 
-  k_s_stretch =1.
+  k_s_stretch =1.8
 !   stretch the k_s grid by factor, usually either 1 or 2...
 
-  alpha_is = Pi*(4.*pi*e**2/m_e)**2*v_s*k2/(6.*k_b*T_e*v_t**2)
+  alpha_is = Pi*(4.*pi*e**2/m_e)**2*v_s*k2/(6.*k_b*T_e*v_t**2)*k_s_stretch
   ! coefficient for decay minus the density change
 
-  gamma_s = sqrt(Pi/2.)*v_s/v_t*(V_s/V_t+(v_s/v_Ti)**3*exp(-v_s*v_s/(2.*v_Ti*v_Ti)))
+  gamma_s = sqrt(Pi/2.)*v_s/v_t*(V_s/V_t+(v_s/v_Ti)**3*exp(-v_s*v_s/(2.*v_Ti*v_Ti)))*k_s_stretch
   ! coefficient for S wave damping minus the k and omega change
 
   k_prime = v_s/(3.*v_t)
-  k_max_max = k_x(4)
-  k_max_s = k_s_stretch*k_x(4)
+  k_max_max = k_x(1)
+  k_max_s = k_s_stretch*k_x(1)
 
 
   ind_2pl = 0
@@ -222,6 +222,20 @@ SUBROUTINE coeff_sound
   frac_2pl(-1:1)=1.
   frac_pls(-1:1)=1.
 
+
+print*, lpc
+print*, 'pls'
+print*, ind_pls
+print*, 'up'
+print*, up_pls
+print*, 'frac'
+print*, frac_pls
+print*, '2pl'
+print*, ind_2pl
+print*, 'up'
+print*, up_2pl
+print*, 'frac'
+print*, frac_2pl
 
 
 END SUBROUTINE coeff_sound

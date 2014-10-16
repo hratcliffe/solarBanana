@@ -197,12 +197,19 @@ ALLOCATE (landau_arr_p(-n_v:n_v,n_xp+3))
   
   CALL coeff(omega_p,landau_arr_p,gamma_cw_p,gamma_cp_p,density_p,log_v_v_t,a2_p,b2_p)
  ! calculates coefficients for quasilinear processes
-
+ 
+ 
+ 
   CALL coeff_sound
   CALL coeff_emh
   CALL coeff_emf
 ! calculates coefficients and wavenumber matching conditions for wave-wave processes
 ! if running only soundwaves (not soundwaves_with_em) can comment out coeff_emf
+
+Do i=-n_kv, n_kv  
+print*,k_x(i), k_x(ind_2pl(i))
+
+enddo
 
   CALL distrib_init(f_p, w_p, w_s_p, w_t_p, w_em_p, w_em_f_p, omega_p, r_x_p)
   ! initialises the distribution functions
@@ -255,6 +262,7 @@ ALLOCATE (landau_arr_p(-n_v:n_v,n_xp+3))
  ! Writing some key variables to the screen
   
 
+
 ! MAIN LOOP starts here ***********************************************
 
 main :    DO WHILE (t .le. t_max)
@@ -270,31 +278,35 @@ main :    DO WHILE (t .le. t_max)
   ENDIF
 
   IF (time_save - MOD(t, time_save) .LE. dt) THEN 
+  
    IF (dumpSingle .LE. 0) THEN
-       CALL write_profiles (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/time_save)+1, omega_p, delta_x_p)
+       CALL write_profiles (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/time_save), omega_p, delta_x_p)
     ELSE
       CALL write_profiles_single (REAL(f_p, 4), REAL(w_p, 4), REAL(w_t_p, 4), REAL(w_s_p, 4) & 
-  ,REAL(w_em_p,4), REAL(w_em_f_p,4), FLOOR(t/time_save)+1, REAL(omega_p,4), REAL(delta_x_p,4))
+  ,REAL(w_em_p,4), REAL(w_em_f_p,4), FLOOR(t/time_save), REAL(omega_p,4), REAL(delta_x_p,4))
   ! writing profiles from each processor to a combined data file
   ! select former for double precision, latter for single AND ALSO ABOVE
     ENDIF
   ENDIF
 
   IF (restart_t - MOD(t, restart_t) .LE. dt) THEN 
-    IF(rank == 0) print*, 'Writing RESTARTABLE', FLOOR(t/restart_t)+1
-    CALL write_profiles_restart (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/restart_t)+1, &
+    IF(rank == 0) print*, 'Writing RESTARTABLE', FLOOR(t/restart_t)
+    CALL write_profiles_restart (f_p, w_p, w_t_p, w_s_p, w_em_p, w_em_f_p, FLOOR(t/restart_t), &
 omega_p, delta_x_p)
 !     writing full precision, all data for restarting with...
 
   ENDIF
   IF (dyn_spec_t - MOD(t, dyn_spec_t) .LE. dt) THEN 
-    CALL write_dynSpec(w_em_p, w_em_f_p,FLOOR(t/dyn_spec_t)+1,omega_p, delta_x_p)
+    CALL write_dynSpec(w_em_p, w_em_f_p,FLOOR(t/dyn_spec_t),omega_p, delta_x_p)
   ENDIF
 
   t = t + dt
 
-  f_p_ql = f_p
-  w_p_ql = w_p
+!  f_p_ql = f_p
+!  w_p_ql = w_p
+  
+  !f_new_p=f_p
+  
   dt_ql_av = 0.
   counter = 0.
   clip = 0.d0
@@ -302,7 +314,7 @@ omega_p, delta_x_p)
 ! quasilinear subcycle..........................................................................................
 
 DO while (abs(t - t_ql) .GE. tiny(1.e0)) 
-  max_w_p = maxval(w_p_ql)
+  max_w_p = maxval(w_p)
 !   print*, max_w_p
   dt_ql = min(dt_ql_const/max_w_p, 2d-4)
   clip=dt_ql
@@ -324,17 +336,18 @@ DO while (abs(t - t_ql) .GE. tiny(1.e0))
 !   routines for self-consitent evolution of electrons and Langmuir waves ....................
 
 !  CALL spontaneous(f_p_ql , w_new_p , log_v_v_t , b2_p)
- 
- CALL collision(f_p_ql , f_new_p , w_new_p , gamma_cp_p , gamma_cw_p , w_p_ql , w_t_p)
+!print*, dt_ql 
+!print*, gamma_cp_p(20)
+ CALL collision(f_p , f_new_p , w_new_p , gamma_cp_p , gamma_cw_p , w_p , w_t_p)
 
  CALL inhomogeneity(w_p_ql , w_new_p , l_p)
 
- CALL quasilinear(f_p_ql , w_p_ql , f_new_p , w_new_p , a2_p)
+ CALL quasilinear(f_p , w_p , f_new_p , w_new_p , a2_p)
  
- CALL landau_background(w_p_ql , w_new_p , landau_arr_p)
+ CALL landau_background(w_p , w_new_p , landau_arr_p)
 
  CALL electron_bounds(f_new_p)
- CALL langmuir_bounds(w_new_p)
+ CALL langmuir_bounds(w_new_p, w_t_p)
 
 
 !  --------------------------------------------------------------------------------------------------
@@ -344,30 +357,46 @@ DO while (abs(t - t_ql) .GE. tiny(1.e0))
 !   we want to absolutely minimise the calculation in there. So we subcycle WITHIN this routine as necessary... number of iterations is t_is which is internall determined
 
 
-!  CALL soundwaves(w_s_p, w_new_p, omega_p, density_p)
+ ! CALL soundwaves(w_s_p, w_new_p, omega_p, density_p)
 !  includes langmuir wave decay to L +S, S wave damping 
 
  CALL soundwaves_with_em(w_s_p, w_new_p, w_em_f_p, omega_p, density_p)
 ! sound wave routines including fundamental emission. use THIS OR soundwaves
-
+CALL langmuir_bounds(w_new_p, w_t_p)
 
  CALL MPI_BARRIER(MPI_COMM_WORLD, ecode)
 ! within soundwaves we have differing timestep over space. protect against one processor getting here earlier
 ! ----------------------------------------------------------------------------------------------------
+
+!routine for Langmuir wave scattering off ions______________________________________________
+
+
+
+!CALL ion_scatter(w_p_ql, w_new_p, omega_p, density_p)
+
+
+
+
+!-----------------------------------------------------------------------------------
+
+
+
+
+
   where (w_new_p(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_new_p(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
 
- ! where (f_new_p(-n_v+2:n_v-2,:) .le. 1d-60) f_new_p(-n_v+2:n_v-2,:)=1d-60
+  where (f_new_p(-n_v+2:n_v-2,:) .le. 1d-30) f_new_p(-n_v+2:n_v-2,:)=0. !1d-60
   
   !bnd conds may introduce -ves, so make sure they go after these zero protects
   !and keep the edge exclusions 
  
   CALL electron_bounds(f_new_p)
-  CALL langmuir_bounds(w_new_p)
+  CALL langmuir_bounds(w_new_p, w_t_p)
   CALL fundamental_bounds(w_em_f_p)
  
   
-  w_p_ql=w_new_p	
-  f_p_ql=f_new_p
+  w_p=w_new_p	
+  f_p=f_new_p
 
 !   where (w_p_ql(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_p_ql(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
 !   w_new_p=w_p_ql  
@@ -377,25 +406,27 @@ ENDDO
 dt_ql_av = dt_ql_av/counter
 
 
-  CALL harmonic(w_new_p, w_em_p, omega_p, density_p)
+ ! CALL harmonic(w_new_p, w_em_p, omega_p, density_p)
 
   CALL upwind_harm(w_em_p, omega_p, l_p, delta_x_p)
 
   CALL upwind_fund(w_em_f_p, omega_p, l_p, delta_x_p)
 
 ! propagation of waves and electrons.............................................................................
-  CALL vanleer(f_p , f_new_p , delta_x_p)
+CALL vanleer(f_p , f_new_p , delta_x_p)
 
-  CALL radial(f_p , f_new_p , r_x_p)
+CALL radial(f_p , f_new_p , r_x_p)
 
   CALL upwind(w_p , w_new_p , delta_x_p)
 
   IF (t <= 4*tau+4*tau2) CALL fsource(f_new_p, r_x_p)
   
   CALL electron_bounds(f_new_p)
-  CALL langmuir_bounds(w_new_p)
+  CALL langmuir_bounds(w_new_p, w_t_p)
   CALL fundamental_bounds(w_em_f_p)
   CALL harmonic_bounds(w_em_p)
+  
+  
   
   where (w_new_p(-n_kv:n_kv,:) .le. w_t_p(-n_kv:n_kv,:)) w_new_p(-n_kv:n_kv,:) = w_t_p(-n_kv:n_kv,:)
 

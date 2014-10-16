@@ -30,11 +30,12 @@ INTEGER(KIND=4):: i,j
     fvx(i,:)=0.
     v = velocity(i)
     wvx(i,:) = (k_b*T_e*omega_x*omega_x/(4.*pi*pi*v*v*k2))*log(abs(v)/v_t)
+    
     w_s(i,:) = 1d-20*abs(k_x(i))
  ENDDO
 
  DO i=n_v+1,n_kv
-	wvx(i,:) = (k_b*T_e*omega_x*omega_x/(4.*pi*pi*v_t*v_t*k2))*k_x(i)*k_x(i)*log(1./abs(k_x(i)))
+	wvx(i,:) = (k_b*T_e*omega_x*omega_x/(4.*pi*pi*v_t*v_t*k2))*k_x(i)*k_x(i)*log(1d0/abs(k_x(i)))
 	wvx(-i,:) = wvx(i,:)
 	w_s(i,:) = 1d-20*abs(k_x(i))
 	w_s(-i,:) = 1d-20*abs(k_x(i))
