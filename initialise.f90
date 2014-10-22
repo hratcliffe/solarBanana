@@ -106,12 +106,7 @@ SUBROUTINE velocity_define
 
   k_x(-n_v:n_v) = v_t/velocity(-n_v:n_v)
 
-  dk_x(1:n_v-1) = abs(k_x(2:n_v) -  k_x(1:n_v-1))
-  dk_x(-n_v+1:-1) = abs(k_x(-n_v:-2) - k_x(-n_v+1:-1)) 
-
-  dk=dk_x(n_v-1)
-
-  
+ 
   DO i= n_v+1, n_kv
     k_x(i) = (v_t/(v_max+dv))*float(n_kv-i+1)/(n_k)
     k_x(-i) = -k_x(i)
@@ -132,8 +127,14 @@ SUBROUTINE velocity_define
   
 !   wavenumber step in equally spaced part
 
+ ! dk_x(1:n_v-1) = abs(k_x(2:n_v) -  k_x(1:n_v-1))
+ ! dk_x(-n_v+1:-1) = abs(k_x(-n_v+1:-1) - k_x(-n_v:-2)) 
+
+  dk=dk_x(n_v-1)
+
+
   dk_x(1:n_kv-1) = abs(k_x(2:n_kv) -  k_x(1:n_kv-1))
-  dk_x(-n_kv+1:-1) = abs(k_x(-n_kv:-2) - k_x(-n_kv+1:-1)) 
+  dk_x(-n_kv+1:-1) = abs(k_x(-n_kv+1:-1) - k_x(-n_kv:-2)) 
   dk_x(n_kv) = dk_x(n_kv-1)
 
   dk_x(-n_kv) = dk_x(-n_kv+1)

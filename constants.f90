@@ -29,9 +29,9 @@
 	! Solar radius
 	REAL(KIND=8), PARAMETER:: AU = 1.5d+13
 	! Astronomical Unit	
-	INTEGER, PARAMETER:: n_v = 150;
+	INTEGER, PARAMETER:: n_v = 100;
 	! Number of V cells on one side
-	INTEGER, PARAMETER:: n_k = 50;
+	INTEGER, PARAMETER:: n_k = 100;
 	! Number of extra K cells on one side
 	INTEGER, PARAMETER:: n_kv =200;
 	! Number of total cells on one side == n_v + n_k
@@ -47,6 +47,7 @@
     CHARACTER(*), PARAMETER:: dynspech_file = 'dynSpecH'
     CHARACTER(*), PARAMETER:: params_file = 'params.dat'
 	CHARACTER(*), PARAMETER:: velocity_file = 'velocity.dat'
+	CHARACTER(*), PARAMETER:: coeff_file = 'coeff.dat'
 	! OUTPUT File names
     CHARACTER(*), PARAMETER:: init_params = 'init.par'
     ! Input file name 

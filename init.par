@@ -8,7 +8,7 @@ time_save = 0.01 ,
   !science data dump every 
 restart_t = 10.,
   !restartable (full precision, all parameters) dump every
-dyn_spec_t = 0.1,
+dyn_spec_t = 0.01,
   !em dynamic spectra file dump every
 
 t_start = 0.

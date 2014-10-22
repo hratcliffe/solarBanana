@@ -79,7 +79,6 @@ SUBROUTINE em_prop_dt
 
   REAL(KIND=8):: dt_x, dt_k
   REAL(KIND=8), DIMENSION(-n_kv:n_kv):: omega_emH_om, v_grp, coeff2
-
  
 
   omega_emH_om = sqrt(1.+v_c**2/v_t**2 *k_h**2)
@@ -92,7 +91,7 @@ SUBROUTINE em_prop_dt
 
 !   print*, dt_x, dt_k
   dt = min(dt_x, dt_k)
-	dt=2d-4
+	!dt=2d-4
 !   EM propagation timescale. need to do comms on this. no change in time. based on harmonic as v_grp faster...
 
 
@@ -108,10 +107,14 @@ SUBROUTINE coeff_sound
   IMPLICIT NONE
 
 
-  REAL(KIND=8) :: k_new, k_max_max, k_max_s, k_prime
-  INTEGER(KIND=4)::i
-
-  k_s_stretch =1.8
+  REAL(KIND=8) :: k_new, k_max_max, k_max_s, k_prime, Delta, num
+  INTEGER(KIND=4)::i, j, jj,ii
+  INTEGER(KIND=4):: max_inc
+  
+  max_inc=10
+  !maximum number of cells one maps to
+ 
+  k_s_stretch =2.
 !   stretch the k_s grid by factor, usually either 1 or 2...
 
   alpha_is = Pi*(4.*pi*e**2/m_e)**2*v_s*k2/(6.*k_b*T_e*v_t**2)*k_s_stretch
@@ -127,115 +130,118 @@ SUBROUTINE coeff_sound
 
   ind_2pl = 0
   ind_pls = 0
-
-  DO i=-n_kv,-1
-
-    k_new = -k_x(i) - 2.*k_prime
-
-    IF (k_new .le. k_max_max .AND. k_new .ge. -k_max_max)	ind_2pl(i) = minloc(abs(k_x - k_new),1)-n_kv-1
-    IF (abs(k_x(ind_2pl(i))) .GE. abs(k_new) ) ind_2pl(i) = ind_2pl(i) + 1
-    IF (abs(k_new) .lt. k_prime) ind_2pl(i) = 0
- 
-!   find k_x nearest to AND LESS THAN k_new. zero index if k_x less than k_prime (no decay occurs)
-
-    k_new = 2.*k_x(i) + 2.*k_prime
-
-    IF (k_new .lt. k_max_s .AND. k_new .gt. -k_max_s)	ind_pls(i) = minloc(abs(k_s_stretch*k_x - k_new),1)-n_kv-1
-    IF (abs(k_s_stretch*k_x(ind_pls(i))) .GE. abs(k_new) ) ind_pls(i) = ind_pls(i) - 1
-    IF(abs(ind_pls(i)) .GE. n_kv-1) ind_pls(i) = 0
+ up_2pl=0
 
 
-  ENDDO
+ lpc=minloc(abs(k_x - k_prime),1)-n_kv-1
 
-  DO i=1,n_kv
+DO i=-n_kv, -2
 
-    k_new = -k_x(i) + 2.*k_prime
+	k_new = -k_x(i) - 2.*k_prime
+		!exact k value mapped to
+	DO j=n_kv, 1, -1
+	  ind_2pl(i)=j
+	  IF( k_new-dk_x(i)/2. .le. k_x(j)+dk_x(j+1)/2.) EXIT 
+	ENDDO
+	!finds cell in which our point lies. We know it's opposite sign to initial	
+   
+    frac_2pl(i, 1) = -(k_new-dk_x(i)/2. - (k_x(j)+dk_x(j+1)/2.)) /((dk_x(j)+dk_x(j+1))/2.)
+	!fraction by which bottom most cell is filled
+  
+   DO j=ind_2pl(i), 1, -1
+	  up_2pl(i)=ind_2pl(i)-j
+	 !print*, j, k_new+dk_x(i+1)/2. , k_x(j)+dk_x(j+1)/2., ind_2pl(i), up_2pl(i)
+	  IF( k_new+dk_x(i+1)/2. .le. k_x(j)+dk_x(j+1)/2.) EXIT 
+	  
+	ENDDO
 
-    IF (k_new .le. k_max_max .AND. k_new .ge. -k_max_max)	ind_2pl(i) = minloc(abs(k_x - k_new),1)-n_kv-1
-    IF (abs(k_x(ind_2pl(i))) .GE. abs(k_new) ) ind_2pl(i) = ind_2pl(i) - 1
-    IF (abs(k_new) .lt. k_prime) ind_2pl(i) = 0
-        
-!   find k_x nearest to AND LESS THAN k_new. zero index if k_x less than k_prime (no decay occurs)
+ 	frac_2pl(i, 2) = (k_new+dk_x(i+1)/2. - (k_x(j)-dk_x(j)/2.)) /((dk_x(j)+dk_x(j+1))/2.)
 
+	frac_2pl(i,3) = max(up_2pl(i)-2, 0) +frac_2pl(i,1)+frac_2pl(i,2)
+
+! print*, 'first', j,k_x(i), k_new, k_x(ind_2pl(i)) 
+
+ if(abs(ind_2pl(i)) .ge. n_kv) then 
+ 	ind_2pl(i)=0
+ 	up_2pl(i)=0	
+	frac_2pl(i,1)=0.	
+	frac_2pl(i,2)=0.	
+	frac_2pl(i,3)=1.
+endif
+
+ENDDO
+
+DO i=-n_kv, -2
+
+!is wave indices are worked out exactly as above for inverted sign of k_new, then flipped to save having to re-reason the calculation...
+	k_new = -(2.*k_x(i) + 2.*k_prime)		
+
+	!exact k value mapped to
+	DO j=n_kv, 1, -1
+	  ind_pls(i)=j
+	  
+	  IF( k_new-2.*dk_x(i)/2. .le. k_s_stretch*(k_x(j)+dk_x(j+1)/2.)) EXIT 
+	ENDDO
+	!finds cell in which our point lies. We know it's same sign as initial	
+	!and we use the stretch factor on the S grid
+
+    frac_pls(i, 1) = -(k_new-2.*dk_x(i)/2. - k_s_stretch*(k_x(j)+dk_x(j+1)/2.)) /(k_s_stretch*(dk_x(j)+dk_x(j+1))/2.)
     
-    k_new = 2.*k_x(i) - 2.*k_prime
+   DO j=ind_pls(i), 1, -1
+	  up_pls(i)=ind_pls(i)-j
+	 IF((k_new+2.*dk_x(i+1)/2.) .le. (k_s_stretch*(k_x(j)+dk_x(j+1)/2.))) EXIT 
+	  
+	ENDDO
 
-! yes this is a hard coded 2. see momentum-frequency conservation relations
+ 	frac_pls(i , 2) = (k_new+2.*dk_x(i+1)/2. - k_s_stretch*(k_x(j)-dk_x(j)/2.)) /(k_s_stretch*(dk_x(j)+dk_x(j+1))/2.)
 
-    IF (k_new .lt. k_max_s .AND. k_new .gt. -k_max_s)	ind_pls(i) = minloc(abs(k_s_stretch*k_x - k_new),1)-n_kv-1
-    IF (k_s_stretch*k_x(ind_pls(i)) .GE. k_new ) ind_pls(i) = ind_pls(i) + 1
-   !     IF (abs(k_new) .le. k_prime) ind_pls(i)=0
-    IF(abs(ind_pls(i)) .GE. n_kv-1) ind_pls(i) = 0
+! 	frac_2pl(i, 2) = (k_new+dk_x(i+1)/2. - (k_x(j)-dk_x(j)/2.)) /((dk_x(j)+dk_x(j+1))/2.)
+	frac_pls(i,3) = max(up_pls(i)-2, 0) +frac_pls(i,1)+frac_pls(i,2)
 
 
-  ENDDO
+
+ if(abs(ind_pls(i)) .ge. n_kv) then 
+ 	ind_pls(i)=0
+ 	up_pls(i)=0	
+	frac_pls(i,1)=0.	
+	frac_pls(i,2)=0.	
+	frac_pls(i,3)=1.
+endif
+
+	ind_pls(i)=-ind_pls(i)
+
+ENDDO
 
 
-  DO i=-n_kv, -1
-    up_2pl(i) = ind_2pl(i+1) - ind_2pl(i) 
-!         up_2pl(i) = ind_2pl(i-1) - ind_2pl(i)
 
-!    UP TO NEXT INDEX NB next may be same number...
-    frac_2pl(i) = 1./(abs(float(up_2pl(i))))
-!   fraction from each resulting point
-    frac_2pl(i) = min(frac_2pl(i), 1.)
-!   fix in case up is zero
-    if(abs(up_2pl(i)) .GE. 1) up_2pl(i) = up_2pl(i) + 1
-!   ditto
-    if(abs(up_2pl(i)) .GE. 20) up_2pl(i) = 0
-!   here indexing is wonky
+DO i=2, n_kv
+
+ind_2pl(i) = -ind_2pl(-i)
+up_2pl(i) = up_2pl(-i)
+frac_2pl(i, :) = frac_2pl(-i,:)
+
+ind_pls(i) = -ind_pls(-i)
+up_pls(i) = up_pls(-i)
+frac_pls(i,:) = frac_pls(-i,:)
+
+ENDDO
+
+!print*, lpc
+
+!do i=-n_kv, -1
 !
-    up_pls(i) = ind_pls(i+1) - ind_pls(i) 
-    frac_pls(i) = 1./(abs(float(up_pls(i))))
-    frac_pls(i) = min(frac_pls(i), 1.)
-    if(abs(up_pls(i)) .GE. 1) up_pls(i) = up_pls(i) - 1
-    if(abs(up_pls(i)) .GE. 20) up_pls(i) = 0
-
-!      up_pls(i) = 1./float(abs(ind_pls(i) - ind_pls(i+1)))
-!     up_pls(i) = min(up_pls(i), 1)
-  
-  ENDDO
-
-  DO i=1, n_kv
-!     up_2pl(i) = ind_2pl(i+1) - ind_2pl(i) 
-    up_2pl(i) = ind_2pl(i-1) - ind_2pl(i)
-    frac_2pl(i) = 1./float(abs(up_2pl(i)))
-    frac_2pl(i) = min(frac_2pl(i), 1.)
-    if(abs(up_2pl(i)) .GE. 1) up_2pl(i) = up_2pl(i) - 1
-    if(abs(up_2pl(i)) .GE. 20) up_2pl(i) = 0
-
-   up_pls(i) = ind_pls(i-1) - ind_pls(i)
-    frac_pls(i) = 1./float(abs(up_pls(i)))
-    frac_pls(i) = min(frac_pls(i), 1.)
-    if(abs(up_pls(i)) .GE. 1) up_pls(i) = up_pls(i) + 1
-    if(abs(up_pls(i)) .GE. 20) up_pls(i) = 0
+!print*, i, ind_2pl(i), up_2pl(i), frac_2pl(i,:), frac_2pl(i,1)+frac_2pl(i-1,2)
+!print*, i,ind_pls(i), up_pls(i), frac_pls(i,:), frac_pls(i,1)+frac_pls(i-1,2)
+!
+!enddo
+!
+!do i=1, n_kv
+!
+!print*, i, ind_2pl(i), up_2pl(i), frac_2pl(i,:), frac_2pl(i,1)+frac_2pl(i+1,2)
+!print*, i,ind_pls(i), up_pls(i), frac_pls(i,:), frac_pls(i,1)+frac_pls(i+1,2)
+!enddo
 
 
-  
-  ENDDO
-
-  lpc=minloc(abs(k_x - k_prime),1)-n_kv-1
-
-  up_2pl(-1:1) = 0.
-  up_pls(-1:1) = 0.
-
-  frac_2pl(-1:1)=1.
-  frac_pls(-1:1)=1.
-
-
-print*, lpc
-print*, 'pls'
-print*, ind_pls
-print*, 'up'
-print*, up_pls
-print*, 'frac'
-print*, frac_pls
-print*, '2pl'
-print*, ind_2pl
-print*, 'up'
-print*, up_2pl
-print*, 'frac'
-print*, frac_2pl
 
 
 END SUBROUTINE coeff_sound

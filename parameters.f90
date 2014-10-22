@@ -53,8 +53,10 @@ INTEGER:: n_xp, v_beam_i, n_p, lpc, lpe
 REAL(KIND=8), DIMENSION(-n_v:n_v):: velocity
 REAL(KIND=8), DIMENSION(-n_kv:n_kv):: k_x, dk_x, k_f, k_h
 !velocity and wavenumber
-INTEGER(KIND=4), DIMENSION(-n_kv:n_kv):: ind_2pl,ind_pls, ind_fs, ind_fe, ind_fe2,ind_h1, ind_h2,up_2pl, up_pls, up_fe, up_fe2
-REAL(KIND=8), DIMENSION(-n_kv: n_kv):: frac_2pl, frac_pls, frac_fe, frac_fe2
+INTEGER(KIND=4), DIMENSION(-n_kv:n_kv):: ind_2pl,ind_pls, ind_fs, ind_fe, ind_fe2,ind_h1, ind_h2,up_2pl
+INTEGER(KIND=4), DIMENSION(-n_kv:n_kv):: up_pls, up_fe, up_fe2, dn_2pl, dn_pls
+REAL(KIND=8), DIMENSION(-n_kv: n_kv, 3):: frac_2pl, frac_pls
+REAL(KIND=8), DIMENSION(-n_kv:n_kv):: frac_fe, frac_fe2
 !     wave wave coefficients
 
 END MODULE PARAMETERS

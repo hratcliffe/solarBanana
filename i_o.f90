@@ -539,6 +539,38 @@ SUBROUTINE write_velocity_params
 
 END SUBROUTINE write_velocity_params
 
+SUBROUTINE write_coeffs
+
+  USE CONSTANTS
+  USE PARAMETERS
+
+  IMPLICIT NONE
+
+  INTEGER(KIND=4):: WriteStat, i
+
+  OPEN (UNIT=20, FILE = trim(path)//coeff_file, STATUS = 'REPLACE', ACTION='WRITE' ) 
+
+  WRITE (20,*, IOSTAT=WRITESTAT) n_v, n_kv
+  WRITE (20, *, IOSTAT=WRITESTAT) k_s_stretch
+  
+  DO i=-n_kv, -1
+
+    WRITE (20,*, IOSTAT=WRITESTAT) i, ind_2pl(i), up_2pl(i), frac_2pl(i,:), frac_2pl(i,1)+frac_2pl(i-1,2)
+    WRITE (20,*, IOSTAT=WRITESTAT) i,ind_pls(i), up_pls(i), frac_pls(i,:), frac_pls(i,1)+frac_pls(i-1,2)
+
+  ENDDO
+
+  DO i=1, n_kv
+
+    WRITE (20,*, IOSTAT=WRITESTAT) i, ind_2pl(i), up_2pl(i), frac_2pl(i,:), frac_2pl(i,1)+frac_2pl(i+1,2)
+    WRITE (20,*, IOSTAT=WRITESTAT) i,ind_pls(i), up_pls(i), frac_pls(i,:), frac_pls(i,1)+frac_pls(i+1,2)
+ ENDDO
+  
+  CLOSE(20)
+
+END SUBROUTINE write_coeffs
+
+
 SUBROUTINE write_progress(time_beg, time_prev)
 
 !   writes progress file at each data save

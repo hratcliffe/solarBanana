@@ -206,10 +206,7 @@ ALLOCATE (landau_arr_p(-n_v:n_v,n_xp+3))
 ! calculates coefficients and wavenumber matching conditions for wave-wave processes
 ! if running only soundwaves (not soundwaves_with_em) can comment out coeff_emf
 
-Do i=-n_kv, n_kv  
-print*,k_x(i), k_x(ind_2pl(i))
-
-enddo
+  CALL write_coeffs
 
   CALL distrib_init(f_p, w_p, w_s_p, w_t_p, w_em_p, w_em_f_p, omega_p, r_x_p)
   ! initialises the distribution functions
@@ -406,7 +403,7 @@ ENDDO
 dt_ql_av = dt_ql_av/counter
 
 
- ! CALL harmonic(w_new_p, w_em_p, omega_p, density_p)
+  CALL harmonic(w_new_p, w_em_p, omega_p, density_p)
 
   CALL upwind_harm(w_em_p, omega_p, l_p, delta_x_p)
 
